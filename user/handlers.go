@@ -9,8 +9,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pengxianghu/v1-be/user/dbops"
 	"github.com/pengxianghu/v1-be/user/defs"
-	"github.com/pengxianghu/v1-be/user/utils"
 	"github.com/pengxianghu/v1-be/user/session"
+	"github.com/pengxianghu/v1-be/user/utils"
 )
 
 func registerUserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -72,16 +72,20 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 
 	s_id, _ := utils.NewUUID()
+	log.Printf("session_id: %s", s_id)
 	err = session.InsertSession("v1-be.user."+db_user.Id, s_id)
 	if err != nil {
 		log.Printf("user login handler insert session error.")
+		return
 	}
 	// return session
-	http.SetCookie(w, &http.Cookie{
+	c := http.Cookie{
 		Name:   "X-Session-Id",
 		Value:  s_id,
+		HttpOnly: true,
 		MaxAge: 1800,
-	})
+	}
+	http.SetCookie(w, &c)
 
 	res := &defs.Result{
 		Code: 0,
@@ -95,6 +99,27 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 
+	// cookie, err := r.Cookie("X-Session-Id")
+	// if err != nil {
+	// 	log.Printf("读取cookie失败: %v", err.Error())
+	// } else {
+	// 	data, _ := json.MarshalIndent(cookie, "", "\t")
+	// 	log.Printf("读取的cookie值: %v", string(data))
+	// }
+
 	sendNormalResponse(w, http.StatusOK, resp)
 
+}
+
+func cookieHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	c := http.Cookie{
+		Name:     "this_is_a_test_cookie",
+		Value:    "1234567890",
+		HttpOnly: false,
+		// Secure:   true,
+		MaxAge: 300}
+	http.SetCookie(w, &c)
+
+	w.Write([]byte("cookie"))
+	
 }

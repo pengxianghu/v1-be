@@ -24,10 +24,6 @@ func HashPwd(pwd string) string {
 	return md5str
 }
 
-// func GenerateSessionId() {
-
-// }
-
 func NewUUID() (string, error) {
 	u, err := uuid.NewV4()
 	if err != nil {
