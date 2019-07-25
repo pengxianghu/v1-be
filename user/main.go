@@ -13,8 +13,6 @@ func registerHandler() *httprouter.Router {
 
 	router.POST("/user/:user_name", loginHandler)
 
-	router.POST("/cookie", cookieHandler)
-
 	return router
 }
 
@@ -38,7 +36,7 @@ func (m middleWareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// validateUserSession(r)
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	m.r.ServeHTTP(w, r)
 }

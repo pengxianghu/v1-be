@@ -70,6 +70,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		sendErrResponse(w, defs.ErrorNotAuthUser)
 		return
 	}
+	user.Id = "v1-be.user." + db_user.Id
 
 	s_id, _ := utils.NewUUID()
 	log.Printf("session_id: %s", s_id)
@@ -109,17 +110,4 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 	sendNormalResponse(w, http.StatusOK, resp)
 
-}
-
-func cookieHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	c := http.Cookie{
-		Name:     "this_is_a_test_cookie",
-		Value:    "1234567890",
-		HttpOnly: false,
-		// Secure:   true,
-		MaxAge: 300}
-	http.SetCookie(w, &c)
-
-	w.Write([]byte("cookie"))
-	
 }
