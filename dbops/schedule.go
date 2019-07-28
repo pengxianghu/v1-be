@@ -28,7 +28,7 @@ func AddSchedule(schedule *defs.Schedule) error {
 
 func GetScheduleByUser(u_id string) ([]*defs.Schedule, error) {
 	scheduleList := make([]*defs.Schedule, 0)
-	stmtOuts, err := dbConn.Prepare("SELECT `id`, `topic`,`content`,`created_at`, `status`, `active` FROM schedule WHERE `user_id` = ? AND `active` = 1")
+	stmtOuts, err := dbConn.Prepare("SELECT `id`, `topic`,`content`,`created_at`, `status`, `active` FROM schedule WHERE `user_id` = ? AND `active` = 1 ORDER BY `created_at` DESC")
 	if err != nil {
 		log.Printf("get Schedule By UserId stmtOuts error: %s\n", err)
 		return scheduleList, err
@@ -41,6 +41,7 @@ func GetScheduleByUser(u_id string) ([]*defs.Schedule, error) {
 		return scheduleList, err
 	}
 	for rows.Next() {
+		schedule = &defs.Schedule{}
 		err = rows.Scan(&schedule.Id, &schedule.Topic, &schedule.Content, &schedule.CreatedAt, &schedule.Status, &schedule.Active)
 		if err != nil {
 			continue
