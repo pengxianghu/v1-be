@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"encoding/json"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,7 +18,8 @@ func (m middleWareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// log.Printf("valid: %v", valid)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json")
 
@@ -41,6 +43,8 @@ func registerHandler() *httprouter.Router {
 
 	router.GET("/schedule/:id", getScheduleByUserHandler)
 
+	router.GET("/user/cookie", getCookie)
+
 	return router
 }
 
@@ -48,4 +52,14 @@ func main() {
 	r := registerHandler()
 	mh := NewMiddleWareHandler(r)
 	http.ListenAndServe(":25001", mh)
+}
+
+func getCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	c, err := r.Cookie("X-Session-Id")
+	if err != nil {
+		w.Write([]byte("读取cookie失败: " + err.Error()))
+	} else {
+		data, _ := json.MarshalIndent(c, "", "\t")
+		w.Write([]byte("读取的cookie值: \n" + string(data)))
+	}
 }
