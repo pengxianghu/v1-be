@@ -18,10 +18,11 @@ func (m middleWareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// log.Printf("valid: %v", valid)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", r.RemoteAddr)
+	w.Header().Set("Access-Control-Allow-Origin", "www.pengxianghu.com")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
 
 	m.r.ServeHTTP(w, r)
 }

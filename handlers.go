@@ -86,7 +86,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		Name:     "X-Session-Id",
 		Value:    s_id,
 		Path:     "/",
-		HttpOnly: false,
+		HttpOnly: true,
 		// Expires: expire,
 		MaxAge: 1800,
 	}
