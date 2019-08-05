@@ -54,3 +54,20 @@ func GetScheduleByUser(u_id string) ([]*defs.Schedule, error) {
 
 	return scheduleList, nil
 }
+
+func DeleteScheduleById(s_id int) error {
+	stmtIns, err := dbConn.Prepare("UPDATE schedule SET `active` = 0 WHERE `id` = ?")
+	if err != nil {
+		log.Printf("delete schedule by id stmtIns error: %v", err)
+		return err
+	}
+	_, err = stmtIns.Exec(s_id)
+	if err != nil {
+		log.Printf("delete schedule by id stmtIns exec error: %v", err)
+		return err
+	}
+
+	defer stmtIns.Close()
+
+	return nil
+}

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pengxianghu/v1-be/dbops"
@@ -85,7 +86,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		Name:     "X-Session-Id",
 		Value:    s_id,
 		Path:     "/",
-		HttpOnly: true,
+		HttpOnly: false,
 		// Expires: expire,
 		MaxAge: 1800,
 	}
@@ -162,5 +163,30 @@ func getScheduleByUserHandler(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	sendNormalResponse(w, http.StatusOK, resp)
+}
 
+func deleteScheduleById(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s_id := ps.ByName("s_id")
+	id, _ := strconv.Atoi(s_id)
+	err := dbops.DeleteScheduleById(id)
+	if err != nil {
+		log.Printf("delete schedule dbops err: %v", err)
+		sendErrResponse(w, defs.ErroeDBError)
+		return 
+	}
+
+	res := &defs.Result{
+		Code: 0,
+		Msg:  "success",
+		Data: nil,
+	}
+
+	resp, err := json.Marshal(res)
+	if err != nil {
+		log.Printf("delete schedule by s_id handler json marshal error")
+		sendErrResponse(w, defs.ErrorInternalFaults)
+		return
+	}
+
+	sendNormalResponse(w, http.StatusOK, resp)
 }

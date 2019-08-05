@@ -18,7 +18,7 @@ func (m middleWareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// log.Printf("valid: %v", valid)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+	w.Header().Set("Access-Control-Allow-Origin", r.RemoteAddr)
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json")
@@ -42,6 +42,8 @@ func registerHandler() *httprouter.Router {
 	router.POST("/schedule", addScheduleHandler)
 
 	router.GET("/schedule/:id", getScheduleByUserHandler)
+
+	router.DELETE("/schedule/:s_id", deleteScheduleById)
 
 	router.GET("/user/cookie", getCookie)
 
