@@ -71,26 +71,36 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		sendErrResponse(w, defs.ErrorNotAuthUser)
 		return
 	}
-	user.Id = "v1-be.user." + db_user.Id
+	user.Id = SESSION_PREFIX + db_user.Id
 
 	s_id, _ := utils.NewUUID()
 	log.Printf("session_id: %s", s_id)
-	err = session.InsertSession("v1-be.user."+db_user.Id, s_id)
+	err = session.InsertSession(SESSION_PREFIX+db_user.Id, s_id)
 	if err != nil {
 		log.Printf("user login handler insert session error.")
 		return
 	}
 	// return session
 	// expire := time.Now().AddDate(0, 0, 1)
-	c := http.Cookie{
-		Name:     "X-Session-Id",
+	s_c := http.Cookie{
+		Name:     HEADER_FIELD_SESSION,
 		Value:    s_id,
 		Path:     "/",
 		HttpOnly: true,
 		// Expires: expire,
 		MaxAge: 1800,
 	}
-	http.SetCookie(w, &c)
+
+	n_c := http.Cookie{
+		Name:     HEADER_FIELD_UNAME,
+		Value:    user.Id,
+		Path:     "/",
+		HttpOnly: true,
+		// Expires: expire,
+		MaxAge: 1800,
+	}
+	http.SetCookie(w, &s_c)
+	http.SetCookie(w, &n_c)
 
 	res := &defs.Result{
 		Code: 0,
@@ -106,6 +116,27 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 	sendNormalResponse(w, http.StatusOK, resp)
 
+}
+
+func logouthandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Printf("logout handler.")
+
+	// 删除cookie
+	n_c := http.Cookie{
+		Name:     HEADER_FIELD_UNAME,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1}
+	http.SetCookie(w, &n_c)
+
+	s_c := http.Cookie{
+		Name:     HEADER_FIELD_SESSION,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1}
+	http.SetCookie(w, &s_c)
+
+	w.Write([]byte("cookie已被删除."))
 }
 
 func addScheduleHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -172,7 +203,7 @@ func deleteScheduleById(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	if err != nil {
 		log.Printf("delete schedule dbops err: %v", err)
 		sendErrResponse(w, defs.ErroeDBError)
-		return 
+		return
 	}
 
 	res := &defs.Result{
@@ -189,4 +220,29 @@ func deleteScheduleById(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	sendNormalResponse(w, http.StatusOK, resp)
+}
+
+func checkCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	n_c, err := r.Cookie(HEADER_FIELD_UNAME)
+	if err != nil {
+		// w.Write([]byte("读取user name cookie失败: " + err.Error()))
+		log.Printf("读取user name cookie失败")
+	} else {
+		data, _ := json.MarshalIndent(n_c, "", "\t")
+		// w.Write([]byte("读取的user name cookie值: \n" + string(data)))
+		log.Printf("读取user name cookie成功: %+v", string(data))
+	}
+
+	s_c, err := r.Cookie(HEADER_FIELD_SESSION)
+	if err != nil {
+		// w.Write([]byte("读取session cookie失败: " + err.Error()))
+		log.Printf("读取session cookie失败")
+
+	} else {
+		data, _ := json.MarshalIndent(s_c, "", "\t")
+		// w.Write([]byte("读取的session cookie值: \n" + string(data)))
+		log.Printf("读取session cookie成功: %+v", string(data))
+	}
+
 }

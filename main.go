@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"encoding/json"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -40,13 +39,15 @@ func registerHandler() *httprouter.Router {
 
 	router.POST("/user/:user_name", loginHandler)
 
+	router.POST("/logout", logouthandler)
+
 	router.POST("/schedule", addScheduleHandler)
 
 	router.GET("/schedule/:id", getScheduleByUserHandler)
 
 	router.DELETE("/schedule/:s_id", deleteScheduleById)
 
-	router.GET("/user/cookie", getCookie)
+	router.GET("/user/cookie", checkCookie)
 
 	return router
 }
@@ -55,14 +56,4 @@ func main() {
 	r := registerHandler()
 	mh := NewMiddleWareHandler(r)
 	http.ListenAndServe(":25001", mh)
-}
-
-func getCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	c, err := r.Cookie("X-Session-Id")
-	if err != nil {
-		w.Write([]byte("读取cookie失败: " + err.Error()))
-	} else {
-		data, _ := json.MarshalIndent(c, "", "\t")
-		w.Write([]byte("读取的cookie值: \n" + string(data)))
-	}
 }
