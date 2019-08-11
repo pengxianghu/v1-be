@@ -2,9 +2,10 @@ package dbops
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
-
+	"time"
+	
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/pengxianghu/v1-be/defs"
 )
 
@@ -42,7 +43,9 @@ func GetScheduleByUser(u_id string) ([]*defs.Schedule, error) {
 	}
 	for rows.Next() {
 		schedule = &defs.Schedule{}
-		err = rows.Scan(&schedule.Id, &schedule.Topic, &schedule.Content, &schedule.CreatedAt, &schedule.Status, &schedule.Active)
+		var t time.Time
+		err = rows.Scan(&schedule.Id, &schedule.Topic, &schedule.Content, &t, &schedule.Status, &schedule.Active)
+		schedule.CreatedAt = t.Format("2006-01-02 15:04:05")
 		if err != nil {
 			continue
 		}

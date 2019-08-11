@@ -95,7 +95,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		Name:     HEADER_FIELD_UNAME,
 		Value:    user.Id,
 		Path:     "/",
-		HttpOnly: true,
+		HttpOnly: false,
 		// Expires: expire,
 		MaxAge: 1800,
 	}
@@ -132,7 +132,7 @@ func logouthandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 	s_c := http.Cookie{
 		Name:     HEADER_FIELD_SESSION,
 		Path:     "/",
-		HttpOnly: true,
+		HttpOnly: false,
 		MaxAge:   -1}
 	http.SetCookie(w, &s_c)
 
@@ -177,6 +177,7 @@ func getScheduleByUserHandler(w http.ResponseWriter, r *http.Request, ps httprou
 	u_id := ps.ByName("id")
 
 	s_list, err := dbops.GetScheduleByUser(u_id)
+
 	if err != nil {
 		log.Printf("get Schedule By user handler dbops error: %s\n", err)
 		sendErrResponse(w, defs.ErroeDBError)
