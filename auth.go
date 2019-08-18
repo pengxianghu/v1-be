@@ -1,18 +1,26 @@
+/*
+ * @Description:
+ * @Autor: pengxianghu
+ * @Date: 2019-08-10 11:24:58
+ * @LastEditTime: 2019-08-17 21:57:35
+ */
 package main
 
 import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/pengxianghu/v1-be/session"
 )
 
 func validateUserSession(r *http.Request) bool {
 	log.Printf("-- remote addr: %v, request url: %v --.", r.RemoteAddr, r.RequestURI)
-	// return true
-	if strings.Contains(r.URL.Path, "user") {
+	if strings.Index(r.URL.Path, "/user") == 0{
 		log.Println("did not need auth")
 		return true
 	}
+	// return true
 	s_c, err := r.Cookie(HEADER_FIELD_SESSION)
 	if err != nil {
 		log.Printf("get session cookie err: %v.", err)
@@ -28,9 +36,15 @@ func validateUserSession(r *http.Request) bool {
 	} else {
 		log.Printf("name: %+v\n", n_c.Value)
 	}
-	// data, _ := json.MarshalIndent(c, "", "\t")
-	// log.Println("读取的cookie值: \n" + string(data))
 
-	log.Println("auth passed")
+	s_val := session.GetSessionValue(n_c.Value)
+
+	if s_val != s_c.Value {
+		log.Println("auth failed.")
+		return false
+	}
+
+	log.Println("auth passed.")
+	session.InsertSession(n_c.Value, s_c.Value)
 	return true
 }

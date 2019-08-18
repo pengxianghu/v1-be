@@ -1,3 +1,9 @@
+/*
+ * @Description:
+ * @Autor: pengxianghu
+ * @Date: 2019-08-11 09:25:00
+ * @LastEditTime: 2019-08-17 20:28:24
+ */
 package main
 
 import (
@@ -139,6 +145,85 @@ func logouthandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 	w.Write([]byte("cookie已被删除."))
 }
 
+func checkCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	n_c, err := r.Cookie(HEADER_FIELD_UNAME)
+	if err != nil {
+		// w.Write([]byte("读取user name cookie失败: " + err.Error()))
+		log.Printf("读取user name cookie失败")
+	} else {
+		data, _ := json.MarshalIndent(n_c, "", "\t")
+		// w.Write([]byte("读取的user name cookie值: \n" + string(data)))
+		log.Printf("读取user name cookie成功: %+v", string(data))
+	}
+
+	s_c, err := r.Cookie(HEADER_FIELD_SESSION)
+	if err != nil {
+		// w.Write([]byte("读取session cookie失败: " + err.Error()))
+		log.Printf("读取session cookie失败")
+
+	} else {
+		data, _ := json.MarshalIndent(s_c, "", "\t")
+		// w.Write([]byte("读取的session cookie值: \n" + string(data)))
+		log.Printf("读取session cookie成功: %+v", string(data))
+	}
+
+}
+
+func getScheduleByIdHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s_id := ps.ByName("id")
+	id, err := strconv.Atoi(s_id)
+	if err != nil {
+		log.Printf("get schedule by id strconv err: %+v", err)
+		sendErrResponse(w, defs.ErrorInternalFaults)
+	}
+	schedule, err := dbops.GetScheduleById(id)
+	if err != nil {
+		log.Printf("get schedule by id dbops err.")
+		sendErrResponse(w, defs.ErroeDBError)
+	}
+
+	res := &defs.Result{
+		Code: 0,
+		Msg:  "success",
+		Data: schedule,
+	}
+	resp, err := json.Marshal(res)
+	if err != nil {
+		log.Printf("get schedule by id json marshal error.")
+		sendErrResponse(w, defs.ErrorInternalFaults)
+		return
+	}
+
+	sendNormalResponse(w, http.StatusOK, resp)
+
+}
+
+func getScheduleByUserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	u_id := ps.ByName("id")
+
+	s_list, err := dbops.GetScheduleByUser(u_id)
+
+	if err != nil {
+		log.Printf("get Schedule By user handler dbops error: %s\n", err)
+		sendErrResponse(w, defs.ErroeDBError)
+	}
+	res := &defs.Result{
+		Code: 0,
+		Msg:  "success",
+		Data: s_list,
+	}
+	resp, err := json.Marshal(res)
+	if err != nil {
+		log.Printf("get schedule by user handler json marshal error")
+		sendErrResponse(w, defs.ErrorInternalFaults)
+		return
+	}
+
+	sendNormalResponse(w, http.StatusOK, resp)
+}
+
 func addScheduleHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	bytes, _ := ioutil.ReadAll(r.Body)
@@ -172,29 +257,36 @@ func addScheduleHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 }
 
-func getScheduleByUserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func updateScheduleHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-	u_id := ps.ByName("id")
+	bytes, _ := ioutil.ReadAll(r.Body)
+	schedule := &defs.Schedule{}
 
-	s_list, err := dbops.GetScheduleByUser(u_id)
-
-	if err != nil {
-		log.Printf("get Schedule By user handler dbops error: %s\n", err)
-		sendErrResponse(w, defs.ErroeDBError)
-	}
-	res := &defs.Result{
-		Code: 0,
-		Msg:  "success",
-		Data: s_list,
-	}
-	resp, err := json.Marshal(res)
-	if err != nil {
-		log.Printf("get schedule by user handler json marshal error")
-		sendErrResponse(w, defs.ErrorInternalFaults)
+	if err := json.Unmarshal(bytes, schedule); err != nil {
+		log.Printf("update schedule handler json unmarshal error: %v", err)
+		sendErrResponse(w, defs.ErrorRequestBodyParseFailed)
 		return
 	}
 
-	sendNormalResponse(w, http.StatusOK, resp)
+	if err := dbops.UpdateScheduleById(schedule); err != nil {
+		log.Printf("update schedule db error: %v", err)
+		sendErrResponse(w, defs.ErroeDBError)
+		return
+	}
+
+	res := &defs.Result{
+		Code: 0,
+		Msg:  "success",
+		Data: schedule,
+	}
+	resp, err := json.Marshal(res)
+	if err != nil {
+		log.Printf("update schedule handler json marshal error: %v", err)
+		sendErrResponse(w, defs.ErrorInternalFaults)
+		return
+	}
+	log.Println("update schedule success.")
+	sendNormalResponse(w, http.StatusCreated, resp)
 }
 
 func deleteScheduleById(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -221,29 +313,4 @@ func deleteScheduleById(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	sendNormalResponse(w, http.StatusOK, resp)
-}
-
-func checkCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
-	n_c, err := r.Cookie(HEADER_FIELD_UNAME)
-	if err != nil {
-		// w.Write([]byte("读取user name cookie失败: " + err.Error()))
-		log.Printf("读取user name cookie失败")
-	} else {
-		data, _ := json.MarshalIndent(n_c, "", "\t")
-		// w.Write([]byte("读取的user name cookie值: \n" + string(data)))
-		log.Printf("读取user name cookie成功: %+v", string(data))
-	}
-
-	s_c, err := r.Cookie(HEADER_FIELD_SESSION)
-	if err != nil {
-		// w.Write([]byte("读取session cookie失败: " + err.Error()))
-		log.Printf("读取session cookie失败")
-
-	} else {
-		data, _ := json.MarshalIndent(s_c, "", "\t")
-		// w.Write([]byte("读取的session cookie值: \n" + string(data)))
-		log.Printf("读取session cookie成功: %+v", string(data))
-	}
-
 }

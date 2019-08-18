@@ -1,3 +1,9 @@
+/*
+ * @Description:
+ * @Autor: pengxianghu
+ * @Date: 2019-08-10 11:24:58
+ * @LastEditTime: 2019-08-17 20:28:57
+ */
 package main
 
 import (
@@ -41,13 +47,17 @@ func registerHandler() *httprouter.Router {
 
 	router.POST("/logout", logouthandler)
 
+	router.GET("/user/cookie", checkCookie)
+
+	router.GET("/schedule/:id", getScheduleByIdHandler)
+
+	router.GET("/schedules/user/:id", getScheduleByUserHandler)
+
 	router.POST("/schedule", addScheduleHandler)
 
-	router.GET("/schedule/:id", getScheduleByUserHandler)
+	router.PUT("/schedule", updateScheduleHandler)
 
 	router.DELETE("/schedule/:s_id", deleteScheduleById)
-
-	router.GET("/user/cookie", checkCookie)
 
 	return router
 }
